@@ -79,7 +79,7 @@ EOF
 cat <<EOF > nginx/default.conf
 server {
     listen 80;
-    server_name $(curl -s ifconfig.me);
+    server_name $(curl -s -4 ifconfig.me);
 
     root /var/www/html;
     index index.php index.html index.htm;
@@ -113,5 +113,7 @@ echo "🚀 Deploying LEMP Stack..."
 docker-compose up -d
 
 echo "✅ Setup complete! Access your server:"
-echo "- PHP Info: http://$(curl -s ifconfig.me)"
-echo "- phpMyAdmin: http://$(curl -s ifconfig.me):8081"
+echo "- PHP Info: http://$(curl -s -4 ifconfig.me)"
+echo "- phpMyAdmin: http://$(curl -s -4 ifconfig.me):8081"
+echo "  - Username: root"
+echo "  - Password: root"
