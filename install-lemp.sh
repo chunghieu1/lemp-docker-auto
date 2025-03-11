@@ -61,12 +61,12 @@ services:
     container_name: phpmyadmin
     restart: always
     environment:
-      PMA_HOST: mysql
+      PMA_HOST: mysql_server
       MYSQL_ROOT_PASSWORD: root
     ports:
       - "8081:80"
     depends_on:
-      - mysql
+      - mysql_server
     networks:
       - lemp_network
 
