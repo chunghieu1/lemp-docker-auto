@@ -46,36 +46,38 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mysql_server
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: lemp_db
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     volumes:
-      - ./mysql:/var/lib/mysql
+      - db_data:/var/lib/mysql
     ports:
       - "3306:3306"
     networks:
       - lemp_network
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+    image: phpmyadmin/phpmyadmin:latest
     container_name: phpmyadmin
-    restart: always
     environment:
-      PMA_HOST: mysql_server
-      MYSQL_ROOT_PASSWORD: root
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
     ports:
       - "8081:80"
     depends_on:
-      - mysql_server
+      - mysql
     networks:
       - lemp_network
 
 networks:
   lemp_network:
     driver: bridge
+    
+volumes:
+  db_data:
 EOF
 
 # Create Nginx configuration file
@@ -117,9 +119,17 @@ docker-compose up -d
 
 # Wait for MySQL to be ready
 echo "⏳ Waiting for MySQL to be ready..."
-until docker exec mysql_server mysqladmin ping -h "localhost" --silent; do
+for i in {30..0}; do
+    if docker exec mysql_server mysqladmin ping -h "localhost" --silent; then
+        break
+    fi
     echo -n "."; sleep 1
 done
+if [ "$i" = 0 ]; then
+    echo "MySQL startup failed"
+    exit 1
+fi
+
 
 echo "✅ Setup complete! Access your server:"
 echo "- PHP Info: http://$(curl -s -4 ifconfig.me)"
