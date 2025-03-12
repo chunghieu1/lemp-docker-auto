@@ -1,8 +1,11 @@
 #!/bin/bash
 
+# Exit immediately if a command exits with a non-zero status
+set -e
+
 # Update the system
 echo "🔄 Updating system..."
-sudo apt update && sudo apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt update -y && sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y -o Dpkg::Options::="--force-confold"
 
 # Install Docker & Docker Compose
 echo "🐳 Installing Docker & Docker Compose..."
@@ -111,6 +114,12 @@ EOF
 # Run Docker Compose
 echo "🚀 Deploying LEMP Stack..."
 docker-compose up -d
+
+# Wait for MySQL to be ready
+echo "⏳ Waiting for MySQL to be ready..."
+until docker exec mysql_server mysqladmin ping -h "localhost" --silent; do
+    echo -n "."; sleep 1
+done
 
 echo "✅ Setup complete! Access your server:"
 echo "- PHP Info: http://$(curl -s -4 ifconfig.me)"
