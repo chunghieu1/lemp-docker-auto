@@ -11,24 +11,12 @@ sudo DEBIAN_FRONTEND=noninteractive apt update -y && sudo DEBIAN_FRONTEND=nonint
 echo "🐳 Installing Docker & Docker Compose..."
 sudo apt install -y docker.io docker-compose
 
-# Install Certbot for SSL
-echo "🔒 Installing Certbot for SSL..."
-sudo apt install -y certbot
-
 # Create directory if it doesn't exist
 INSTALL_DIR=~/lemp-docker
 if [ ! -d "$INSTALL_DIR" ]; then
     mkdir -p $INSTALL_DIR/{src,nginx,mysql}
 fi
 cd $INSTALL_DIR
-
-# Generate SSL certificates using Certbot
-echo "🔐 Generating SSL certificates..."
-sudo certbot certonly --standalone --non-interactive --agree-tos --email your-email@example.com -d $(curl -s -4 ifconfig.me)
-
-# Copy the certificates to the certs directory
-sudo cp /etc/letsencrypt/live/$(curl -s -4 ifconfig.me)/fullchain.pem certs/
-sudo cp /etc/letsencrypt/live/$(curl -s -4 ifconfig.me)/privkey.pem certs/
 
 # Create docker-compose.yml file
 cat <<EOF > docker-compose.yml
@@ -39,11 +27,9 @@ services:
     container_name: nginx_server
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - ./src:/var/www/html
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./certs:/etc/nginx/certs
     depends_on:
       - php
     networks:
@@ -77,8 +63,8 @@ services:
     container_name: phpmyadmin
     environment:
       PMA_HOST: mysql
-      MYSQL_ROOT_PASSWORD: root
-      PMA_ABSOLUTE_URI: https://$(curl -s -4 ifconfig.me):8081/
+      PMA_USER: root
+      PMA_PASSWORD: root
     ports:
       - "8081:80"
     depends_on:
@@ -144,8 +130,7 @@ if [ "$i" = 0 ]; then
     exit 1
 fi
 
+
 echo "✅ Setup complete! Access your server:"
 echo "- PHP Info: http://$(curl -s -4 ifconfig.me)"
 echo "- phpMyAdmin: http://$(curl -s -4 ifconfig.me):8081"
-echo "  - Username: root"
-echo "  - Password: root"
